@@ -36,7 +36,7 @@ try:
         config['cookie']['key'],
         config['cookie']['expiry_days']
     )
-    name, authentication_status, username = authententicator.login(location="main")
+    name, authentication_status, username = authenticator.login(title="Login to Radiant Launch", location="main")
 except (KeyError, Exception) as e:
     st.warning(f"Auth setup failed ({e}). Running in guest mode—no login required.")
     name, authentication_status, username = "Guest", True, "guest"
@@ -48,7 +48,7 @@ elif authentication_status == None:
 elif authentication_status:
     st.title("🌟 Radiant Launch: Open-Source xAI Campaign Agent")
     st.write("Standalone for small biz campaigns (dental services/products). Edit config.yaml for hooks.")
-    if 'authenticator' in locals():
+    if 'authenticator' in locals():  # Fix: Only logout if authenticator exists
         authenticator.logout("Logout", "main")
 
     # Load mock CRM
@@ -163,14 +163,27 @@ elif authentication_status:
             deploy_tool = Tool(name="Deployer", description="Deploys HTML.", func=lambda x: deploy_page(x.split(',')[0][:100] + '...', x.split(',')[1]))
 
             # Grok Orchestrator
-            tools = [content_tool, crm_tool, deploy_tool]
-            prompt = PromptTemplate.from_template(
-                """You are Grok, Radiant Launch Orchestrator for small biz (dental clinics).
-                Brief: {brief} | Mode: {mode} | Filter: {crm_filter} | Deploy: {deploy_to}
-                Steps: 1. Pull CRM leads. 2. Gen content/images (diverse smiles). 3. Deploy. 4. Report URL, leads, tips."""
-            )
-            agent = create_react_agent(llm, tools, prompt)
-            executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+            from langchain.agents import AgentType  # Add for ReAct type
+tools = [content_tool, crm_tool, deploy_tool]
+prompt = PromptTemplate.from_template(  # Use built-in ReAct prompt
+    "Answer the following questions as best you can. You have access to the following tools:\n\n{tools}\n\nUse the following format:\n\nQuestion: the input question you must answer\nThought: you should always think about what to do\nAction: the action to take, should be one of [{tool_names}]\nAction Input: the input to the action\nObservation: the result of the action\n... (this Thought/Action/Action Input/Observation can repeat N times)\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n\nBegin!\n\nQuestion: {input}\nThought: {agent_scratchpad}"
+)
+
+try:
+    agent = create_react_agent(llm, tools, prompt)
+    executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+except Exception as e:
+    st.error(f"Agent setup failed ({e}). Using mock mode.")
+    executor = None
+
+            #tools = [content_tool, crm_tool, deploy_tool]
+            #prompt = PromptTemplate.from_template(
+            #    """You are Grok, Radiant Launch Orchestrator for small biz (dental clinics).
+            #    Brief: {brief} | Mode: {mode} | Filter: {crm_filter} | Deploy: {deploy_to}
+            #   Steps: 1. Pull CRM leads. 2. Gen content/images (diverse smiles). 3. Deploy. 4. Report URL, leads, tips."""
+            #)
+            #agent = create_react_agent(llm, tools, prompt)
+            #executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
 
             # Execute
             with st.spinner("Grok launching your campaign..."):
