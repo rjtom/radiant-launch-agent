@@ -1,0 +1,20 @@
+credentials:  # Auth (hash pw at bcrypt.online)
+  usernames:
+    test_user:
+      email: your@email.com
+      name: Test Manager
+      password: $2b$12$hashed_pw_here
+cookie:
+  name: radiant_auth
+  key: random_key_change_me
+  expiry_days: 30
+enable_mcp: false  # Toggle for real CRM
+mcp_url: "http://localhost:8080/mcp/v1"
+custom_templates:
+  services:
+    features: ["Whitening Magic", "Aligner Glow", "Confidence Boost"]
+    cta: "Book Your Glow Consult"
+  products:
+    features: ["Home Kit Bundle", "Floss Pro Pack", "Smile Guard"]
+    cta: "Shop Now & Save 20%"
+grok_prompt_override: "Tailor for dental: Emphasize diverse smiles (men/women)."
