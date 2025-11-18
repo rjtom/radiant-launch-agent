@@ -36,7 +36,7 @@ try:
         config['cookie']['key'],
         config['cookie']['expiry_days']
     )
-    name, authentication_status, username = authenticator.login(title="Login to Radiant Launch", location="main")
+    name, authentication_status, username = authententicator.login(location="main")
 except (KeyError, Exception) as e:
     st.warning(f"Auth setup failed ({e}). Running in guest mode—no login required.")
     name, authentication_status, username = "Guest", True, "guest"
